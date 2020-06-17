@@ -1,0 +1,14 @@
+#!/usr/bin/env python
+import os
+import sys
+import json
+
+pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
+sys.path.insert(0, pkg_root)  # noqa
+
+import herzog
+
+
+if __name__ == "__main__":
+    with open(sys.argv[1]) as fh:
+        print(json.dumps(herzog.generate(fh), indent=2))
