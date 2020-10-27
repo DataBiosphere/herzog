@@ -30,8 +30,11 @@ herzog path/to/my/cool_script.py > path/to/my/cool_notebook.ipynb
 
 ### Example
 
-The script below, which can be [found in the herzog repo](https://github.com/xbrianh/herzog/blob/master/tests/fixtures/fibonacci.py),
-has been generated into a notebook as [shown here](https://github.com/xbrianh/herzog/blob/master/tests/fixtures/fibonacci.ipynb).
+An example herzog script is shown below, along with the generated notebook. Both the
+[herzog source](https://github.com/xbrianh/herzog/blob/master/tests/fixtures/fibonacci.py)
+and
+[generated notebook](https://github.com/xbrianh/herzog/blob/master/tests/fixtures/fibonacci.ipynb)
+can be found in the herzog repository.
 
 Note that everything outside herzog context managers is not included in the notebook. That's where you put tests,
 developer notes, salacious accusations, or anything else.
@@ -69,16 +72,21 @@ golden_ratio = (1 + 5 ** 0.5) / 2
 assert 1e-10 > abs(golden_ratio - fibonacci(26) / fibonacci(25))
 ```
 
+![Rendered Fibonacci notebook](https://github.com/xbrianh/herzog/blob/xbrianh-update-readme/tests/fixtures/fibonacci_rendered.png)
+
 ## Installation
 
 ```
-pip install git+https://github.com/xbrianh/herzog
+pip install herzog
 ```
 
 ## Links
 
 Project home page [GitHub](https://github.com/xbrianh/herzog)  
+Package distribution [PyPI](https://pypi.org/project/herzog/)
 
 ### Bugs
 
 Please report bugs, issues, feature requests, etc. on [GitHub](https://github.com/xbrianh/herzog).
+
+![](https://travis-ci.org/xbrianh/herzog.svg?branch=master) ![](https://badge.fury.io/py/herzog.svg)
