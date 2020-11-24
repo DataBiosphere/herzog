@@ -1,4 +1,3 @@
-import io
 import os
 from enum import Enum, auto
 from typing import Generator, Iterable, List, Optional, TextIO
@@ -15,39 +14,28 @@ JUPYTER_MAGIC_PFX = "#%"
 class HerzogCell:
     _translate = {CellType.python: "code", CellType.markdown: "markdown"}
 
-    def __init__(self, definition_line):
-        args, kwargs = _get_args(definition_line.split("(", 1)[1].split(")", 1)[0])
-        self.cell_type = CellType[args[0]]
-        self._indent = None
-        self.lines = list()
-
-    def add_line(self, line):
-        if self._indent is None:
-            self._indent = line.replace(line.lstrip(), "")
-        if line.strip():
-            assert line.startswith(self._indent)
-        line = line.rstrip()[len(self._indent):]
-        if CellType.python == self.cell_type:
-            if "pass" == line:
-                pass
-            elif line.startswith(JUPYTER_SHELL_PFX) or line.startswith(JUPYTER_MAGIC_PFX):
-                self.lines.append(line[1:])
-            else:
-                self.lines.append(line)
-        elif CellType.markdown == self.cell_type:
-            if "\"\"\"" == line:
-                pass
-            else:
-                self.lines.append(line)
+    def __init__(self, cell_type: CellType, lines: Iterable[str]):
+        self.cell_type = cell_type
+        self.lines: List[str] = list()
+        for line in lines:
+            if CellType.python == self.cell_type:
+                if "pass" == line:
+                    pass
+                elif line.startswith(JUPYTER_SHELL_PFX) or line.startswith(JUPYTER_MAGIC_PFX):
+                    self.lines.append(line[1:])
+                else:
+                    self.lines.append(line)
+            elif CellType.markdown == self.cell_type:
+                if '"""' == line:
+                    pass
+                else:
+                    self.lines.append(line)
 
     @property
     def has_ipynb_representation(self):
         return self.cell_type in self._translate
 
     def to_ipynb_cell(self):
-        while self.lines and not self.lines[-1]:
-            # Strip whitespace off end of cell
-            self.lines.pop()
         jupyter_cell = dict(cell_type=self._translate[self.cell_type],
                             metadata=dict(),
                             source=os.linesep.join(self.lines))
@@ -82,6 +70,18 @@ class _RewindableIterator:
     def rewind(self):
         self._rewind = True
 
+def _parse_cell(lines: _RewindableIterator) -> Generator[str, None, None]:
+    indent: Optional[str] = None
+    for line in lines:
+        if indent is None:
+            indent = line.replace(line.lstrip(), "")
+        if not line.strip():
+            yield ""  # allow vertical whitespace
+        elif line.startswith(indent):
+            yield line.rstrip()[len(indent):]
+        else:
+            break
+
 def _validate_cell(cell_lines: List[str], line_number: Optional[int]=None):
     line_number_str = str(line_number) if line_number is not None else "?"
     if not cell_lines:
@@ -92,39 +92,16 @@ def _validate_cell(cell_lines: List[str], line_number: Optional[int]=None):
         except SyntaxError:
             raise SyntaxError(f"line {line_number_str}")
 
-def parse_cells(handle: TextIO) -> Generator[HerzogCell, None, None]:
-    for line in handle:
-        if line.startswith("with herzog.Cell"):
-            break
-    obj = HerzogCell(line)
-    for line in handle:
-        if line.startswith("with herzog.Cell"):
-            if obj:
-                _validate_cell(obj.lines)
-                yield obj
-            obj = HerzogCell(line)
-        elif not obj and not line.strip():
-            pass
-        elif obj and not line.strip():
-            obj.add_line(line)
-        elif obj and obj._indent is None:
-            obj.add_line(line)
-        elif obj and not line.startswith(obj._indent):
-            _validate_cell(obj.lines)
-            yield obj
-            obj = None
-        elif obj and line.startswith(obj._indent):
-            obj.add_line(line)
-        else:
-            continue
-    if obj:
-        _validate_cell(obj.lines)
-        yield obj
-
-def _get_args(argstring):
-    _getarg = "\n".join((["def getarg(*args, **kwargs):",
-                          "    return args, kwargs",
-                          "args, kwargs = getarg({})"]))
-    global_vars, local_vars = dict(), dict()
-    exec(_getarg.format(argstring), global_vars, local_vars)
-    return local_vars['args'], local_vars['kwargs']
+def parse_cells(raw_lines: TextIO) -> Generator[HerzogCell, None, None]:
+    rlines = _RewindableIterator(raw_lines)
+    for line in rlines:
+        if "with herzog.Cell" in line:
+            cell_type_string = line.strip()[len("with herzog.Cell"):].strip('"():')
+            cell_type = CellType[cell_type_string]
+            line_number = rlines.item_number
+            cell_lines = [line for line in _parse_cell(rlines)]
+            while cell_lines and not cell_lines[-1]:  # Strip whitespace off end of cell
+                cell_lines.pop()
+            _validate_cell(cell_lines, line_number)
+            rlines.rewind()
+            yield HerzogCell(cell_type, cell_lines)
