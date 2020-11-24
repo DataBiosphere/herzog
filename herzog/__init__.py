@@ -81,6 +81,9 @@ class ParserObject:
         return self.cell_type in self._translate
 
     def to_ipynb_cell(self):
+        while self.lines and not self.lines[-1]:
+            # Strip whitespace off end of cell
+            self.lines.pop()
         jupyter_cell = dict(cell_type=self._translate[self.cell_type],
                             metadata=dict(),
                             source=os.linesep.join(self.lines))
