@@ -41,3 +41,8 @@ with herzog.Cell("python"):
     print(os.path)
     print(doom)
     print(comp)
+with herzog.Cell("python"):
+    """
+    bad style
+    """
+    pass
