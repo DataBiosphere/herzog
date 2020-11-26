@@ -1,6 +1,7 @@
 import io
 import os
 from enum import Enum, auto
+from typing import TextIO
 
 class CellType(Enum):
     python = auto()
@@ -56,7 +57,7 @@ class HerzogCell:
         return jupyter_cell
 
 class Parser:
-    def __init__(self, handle: io.FileIO):
+    def __init__(self, handle: TextIO):
         self.handle = handle
         self._prev_line = None
         self.objects = [c for c in self._parse_objects()]
