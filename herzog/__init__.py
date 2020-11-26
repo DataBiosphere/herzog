@@ -4,6 +4,7 @@ import json
 from copy import deepcopy
 import __main__
 from types import ModuleType
+from typing import TextIO
 
 from herzog.parser import Parser, CellType
 
@@ -38,7 +39,7 @@ class Sandbox:
                     del __main__.__dict__[key]
             __main__.__dict__.update(self._state_modules)
 
-def generate(handle: io.FileIO):
+def generate(handle: TextIO):
     p = Parser(handle)
     cells = [obj.to_ipynb_cell() for obj in p.objects
              if obj.has_ipynb_representation]
