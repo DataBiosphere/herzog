@@ -13,10 +13,6 @@ import herzog
 
 
 class TestHerzog(unittest.TestCase):
-    def test_evaluate(self):
-        p = subprocess.run([f"{sys.executable}", "tests/fixtures/example.py"])
-        p.check_returncode()
-
     def test_parser(self):
         with open("tests/fixtures/example.py", "r") as fh:
             cells = self._gen_cells_from_content(fh.read())
