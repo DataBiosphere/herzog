@@ -25,8 +25,7 @@ class TestHerzog(unittest.TestCase):
             self.assertEqual(expected_cell, cell)
 
     def _gen_cells_from_content(self, content: str):
-        p = herzog.Parser(io.StringIO(content))  # type: ignore
-        return [obj.to_ipynb_cell() for obj in p.objects
+        return [obj.to_ipynb_cell() for obj in herzog.parse_cells(io.StringIO(content))
                 if obj.has_ipynb_representation]
 
     def test_generate(self):

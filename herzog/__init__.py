@@ -6,7 +6,7 @@ import __main__
 from types import ModuleType
 from typing import TextIO
 
-from herzog.parser import Parser, CellType
+from herzog.parser import parse_cells, CellType
 
 
 class Cell:
@@ -40,8 +40,7 @@ class Sandbox:
             __main__.__dict__.update(self._state_modules)
 
 def generate(handle: TextIO):
-    p = Parser(handle)
-    cells = [obj.to_ipynb_cell() for obj in p.objects
+    cells = [obj.to_ipynb_cell() for obj in parse_cells(handle)
              if obj.has_ipynb_representation]
     with open(os.path.join(os.path.dirname(__file__), "data", "python_3_boiler.json")) as fh:
         boiler = json.loads(fh.read())
