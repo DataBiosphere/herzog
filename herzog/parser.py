@@ -9,7 +9,7 @@ class CellType(Enum):
 JUPYTER_SHELL_PFX = "#!"
 JUPYTER_MAGIC_PFX = "#%"
 
-class ParserObject:
+class HerzogCell:
     _translate = {CellType.python: "code", CellType.markdown: "markdown"}
 
     def __init__(self, definition_line):
@@ -69,12 +69,12 @@ class Parser:
         for line in self.lines():
             if line.startswith("with herzog.Cell"):
                 break
-        obj = ParserObject(line)
+        obj = HerzogCell(line)
         for line in self.lines():
             if line.startswith("with herzog.Cell"):
                 if obj:
                     yield obj
-                obj = ParserObject(line)
+                obj = HerzogCell(line)
             elif not obj and not line.strip():
                 pass
             elif obj and not line.strip():
