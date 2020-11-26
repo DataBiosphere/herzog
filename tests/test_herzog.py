@@ -13,6 +13,10 @@ import herzog
 
 
 class TestHerzog(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.maxDiff = None
+
     def test_parser(self):
         with open("tests/fixtures/example.py", "r") as fh:
             cells = self._gen_cells_from_content(fh.read())
