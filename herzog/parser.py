@@ -1,7 +1,7 @@
 import io
 import os
 from enum import Enum, auto
-from typing import Generator, TextIO
+from typing import Generator, Iterable, Optional, TextIO
 
 
 class CellType(Enum):
@@ -56,6 +56,33 @@ class HerzogCell:
         if CellType.python == self.cell_type:
             jupyter_cell.update(dict(execution_count=None, outputs=list()))
         return jupyter_cell
+
+class _RewindableIterator:
+    def __init__(self, iterable: Iterable):
+        self._iterable = iterable
+        self._prev: Optional[str] = None
+        self._rewind = False
+        self.item_number = 0
+
+    def __next__(self):
+        if self._rewind and self._prev is not None:
+            item = self._prev
+            self._rewind = False
+        else:
+            item = next(self._iterable)
+            self._prev = item
+            self.item_number += 1
+        return item
+
+    def __iter__(self):
+        try:
+            while True:
+                yield next(self)
+        except StopIteration:
+            pass
+
+    def rewind(self):
+        self._rewind = True
 
 def parse_cells(handle: TextIO) -> Generator[HerzogCell, None, None]:
     for line in handle:
