@@ -1,7 +1,8 @@
 import io
 import os
 from enum import Enum, auto
-from typing import TextIO
+from typing import Generator, TextIO
+
 
 class CellType(Enum):
     python = auto()
@@ -56,41 +57,31 @@ class HerzogCell:
             jupyter_cell.update(dict(execution_count=None, outputs=list()))
         return jupyter_cell
 
-class Parser:
-    def __init__(self, handle: TextIO):
-        self.handle = handle
-        self._prev_line = None
-        self.objects = [c for c in self._parse_objects()]
-
-    def lines(self):
-        for line in self.handle:
-            yield line
-
-    def _parse_objects(self):
-        for line in self.lines():
-            if line.startswith("with herzog.Cell"):
-                break
-        obj = HerzogCell(line)
-        for line in self.lines():
-            if line.startswith("with herzog.Cell"):
-                if obj:
-                    yield obj
-                obj = HerzogCell(line)
-            elif not obj and not line.strip():
-                pass
-            elif obj and not line.strip():
-                obj.add_line(line)
-            elif obj and obj._indent is None:
-                obj.add_line(line)
-            elif obj and not line.startswith(obj._indent):
+def parse_cells(handle: TextIO) -> Generator[HerzogCell, None, None]:
+    for line in handle:
+        if line.startswith("with herzog.Cell"):
+            break
+    obj = HerzogCell(line)
+    for line in handle:
+        if line.startswith("with herzog.Cell"):
+            if obj:
                 yield obj
-                obj = None
-            elif obj and line.startswith(obj._indent):
-                obj.add_line(line)
-            else:
-                continue
-        if obj:
+            obj = HerzogCell(line)
+        elif not obj and not line.strip():
+            pass
+        elif obj and not line.strip():
+            obj.add_line(line)
+        elif obj and obj._indent is None:
+            obj.add_line(line)
+        elif obj and not line.startswith(obj._indent):
             yield obj
+            obj = None
+        elif obj and line.startswith(obj._indent):
+            obj.add_line(line)
+        else:
+            continue
+    if obj:
+        yield obj
 
 def _get_args(argstring):
     _getarg = "\n".join((["def getarg(*args, **kwargs):",
