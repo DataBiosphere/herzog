@@ -1,7 +1,7 @@
 import io
 import os
 from enum import Enum, auto
-from typing import Generator, Iterable, Optional, TextIO
+from typing import Generator, Iterable, List, Optional, TextIO
 
 
 class CellType(Enum):
@@ -82,6 +82,16 @@ class _RewindableIterator:
     def rewind(self):
         self._rewind = True
 
+def _validate_cell(cell_lines: List[str], line_number: Optional[int]=None):
+    line_number_str = str(line_number) if line_number is not None else "?"
+    if not cell_lines:
+        raise SyntaxError(f"line {line_number_str}: Expected Herzog cell content")
+    else:
+        try:
+            compile(os.linesep.join(cell_lines), "", "exec")
+        except SyntaxError:
+            raise SyntaxError(f"line {line_number_str}")
+
 def parse_cells(handle: TextIO) -> Generator[HerzogCell, None, None]:
     for line in handle:
         if line.startswith("with herzog.Cell"):
@@ -90,6 +100,7 @@ def parse_cells(handle: TextIO) -> Generator[HerzogCell, None, None]:
     for line in handle:
         if line.startswith("with herzog.Cell"):
             if obj:
+                _validate_cell(obj.lines)
                 yield obj
             obj = HerzogCell(line)
         elif not obj and not line.strip():
@@ -99,6 +110,7 @@ def parse_cells(handle: TextIO) -> Generator[HerzogCell, None, None]:
         elif obj and obj._indent is None:
             obj.add_line(line)
         elif obj and not line.startswith(obj._indent):
+            _validate_cell(obj.lines)
             yield obj
             obj = None
         elif obj and line.startswith(obj._indent):
@@ -106,6 +118,7 @@ def parse_cells(handle: TextIO) -> Generator[HerzogCell, None, None]:
         else:
             continue
     if obj:
+        _validate_cell(obj.lines)
         yield obj
 
 def _get_args(argstring):
