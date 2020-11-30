@@ -7,6 +7,7 @@ from typing import Generator, Iterable, Optional, TextIO
 class CellType(Enum):
     python = auto()
     markdown = auto()
+    sandbox = auto()
 
 JUPYTER_SHELL_PFX = "#!"
 JUPYTER_MAGIC_PFX = "#%"
@@ -15,11 +16,8 @@ class HerzogCell:
     _translate = {CellType.python: "code", CellType.markdown: "markdown"}
 
     def __init__(self, definition_line):
-        if "Sandbox" in definition_line:
-            self.cell_type = CellType.sandbox
-        else:
-            args, kwargs = _get_args(definition_line.split("(", 1)[1].split(")", 1)[0])
-            self.cell_type = CellType[args[0]]
+        args, kwargs = _get_args(definition_line.split("(", 1)[1].split(")", 1)[0])
+        self.cell_type = CellType[args[0]]
         self._indent = None
         self.lines = list()
 
