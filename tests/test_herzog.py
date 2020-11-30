@@ -28,6 +28,19 @@ class TestHerzog(unittest.TestCase):
         for expected_cell, cell in zip(expected_cells, cells):
             self.assertEqual(expected_cell, cell)
 
+    def test_parser_errors(self):
+        tests = {
+            'Empty Herzog context manager': r'with herzog.Cell("python"):',
+            'Incorrect syntax': os.linesep.join((r'with herzog.Cell("python"):',
+                                                 r'    int("frank"')),
+            'Double cell definitions': os.linesep.join((r'with herzog.Cell("python"):',
+                                                        r'with herzog.Cell("python"):'))
+        }
+        for test_name, cell_content in tests.items():
+            with self.subTest(test_name):
+                with self.assertRaises(SyntaxError):
+                    self._gen_cells_from_content(cell_content)
+
     def _gen_cells_from_content(self, content: str):
         return [cell.to_ipynb_cell() for cell in herzog.parse_cells(io.StringIO(content))
                 if cell.has_ipynb_representation]
