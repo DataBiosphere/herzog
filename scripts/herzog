@@ -1,14 +1,67 @@
 #!/usr/bin/env python
+import argparse
 import os
 import sys
 import json
+import py_compile
+
+from typing import Union, List
 
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
 
 import herzog
 
+SUPPORTED_SOURCE_TYPES = ['ipynb', 'herzog']
+
+
+def check_file_type(file_name: str) -> str:
+    assert os.path.exists(file_name)
+    try:
+        with open(file_name, 'r') as f:
+            metadata = json.loads(f.read())['metadata']
+            assert 'python' in metadata['language_info']['mimetype']  # text/x-python
+            assert metadata['language_info']['version'].startswith('3')
+            return 'ipynb'
+    except Exception:  # noqa
+        pass
+
+    try:
+        py_compile.compile(file_name, doraise=True)
+        with open(file_name, 'r') as f:
+            assert 'import herzog' in f.read()
+        return 'herzog'
+    except Exception:  # noqa
+        raise RuntimeError(f'Could not determine a supported file type for: {file_name}\n'
+                           f'Please specify a file type with --source-type.  Supported choices are: '
+                           f'{SUPPORTED_SOURCE_TYPES}.  Python 2 is not supported.')
+
+def main(args: Union[List[str]] = None) -> None:
+    if args is None:
+        args = sys.argv[1:]
+
+    if len(args) == 1:
+        # maintain backwards compatibility
+        with open(args[0]) as fh:
+            print(json.dumps(herzog.generate(fh), indent=2))
+            exit()
+
+    parser = argparse.ArgumentParser(prog='Herzog',
+                                     description='Developer tool to translate notebooks to runnable code and '
+                                                 'back again, allowing notebooks to be written, reviewed, '
+                                                 'and versioned-controlled as normal code.')
+    parser.add_argument('--source', dest='source', type=str,
+                        help="The name of an input file.  You may explicitly provide the file type with "
+                             "--source-type, otherwise one will be inferred.")
+    parser.add_argument('--source-type', dest='source_type', type=str, choices=SUPPORTED_SOURCE_TYPES, default=None,
+                        help=f"The input file type of --source.  If not provided, type will be inferred.  "
+                             f"Supported options: {SUPPORTED_SOURCE_TYPES}")
+    options = parser.parse_args()
+    source_type = options.source_type or check_file_type(options.source)
+
+    with open(options.source, 'r') as fh:
+        print(herzog.generate(fh, source_type=source_type))
+
 
 if __name__ == "__main__":
-    with open(sys.argv[1]) as fh:
-        print(json.dumps(herzog.generate(fh), indent=2))
+    main()

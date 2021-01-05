@@ -1,10 +1,11 @@
 import os
+import sys
 import json
 from copy import deepcopy
 import __main__
+import textwrap
 from types import ModuleType
-from typing import TextIO
-
+from typing import TextIO, Dict, Any, Union, Optional
 from herzog.parser import parse_cells, CellType
 
 
@@ -38,10 +39,48 @@ class Sandbox:
                     del __main__.__dict__[key]
             __main__.__dict__.update(self._state_modules)
 
-def generate(handle: TextIO):
-    cells = [obj.to_ipynb_cell() for obj in parse_cells(handle)
+def load_ipynb_cells(ipynb: TextIO) -> Dict[Any, Any]:
+    try:
+        cells = json.loads(ipynb.read()).get('cells', None)
+    except Exception:
+        print(f'Check that "{ipynb}" is a valid ipynb file.', file=sys.stderr)
+        raise
+
+    if not cells:
+        print(f'Python notebook: "{ipynb}" has no cells.\nNothing to be done.  Exiting... ')
+        exit()
+    return cells
+
+def generate(handle: TextIO, source_type: Optional[str] = 'herzog') -> Union[Dict[Any, Any], str]:
+    if source_type == 'herzog':
+        return translate_to_ipynb(handle)
+    elif source_type == 'ipynb':
+        return translate_to_herzog(handle)
+    else:
+        raise NotImplementedError(f'source_type: "{source_type}" not supported.')
+
+def translate_to_ipynb(herzog_handle: TextIO) -> Dict[Any, Any]:
+    cells = [obj.to_ipynb_cell() for obj in parse_cells(herzog_handle)
              if obj.has_ipynb_representation]
     with open(os.path.join(os.path.dirname(__file__), "data", "python_3_boiler.json")) as fh:
         boiler = json.loads(fh.read())
     ipynb = dict(cells=cells, **boiler)
     return ipynb
+
+def translate_to_herzog(ipynb_handle: TextIO, indent: int = 4) -> str:
+    cells = load_ipynb_cells(ipynb_handle)
+    python_prefix = ' ' * indent
+    markdown_prefix = python_prefix + '# '
+    script = 'import herzog\n\n'
+
+    for cell in cells:
+        if cell['cell_type'] == 'markdown':
+            script += "\nwith herzog.Cell('markdown'):\n"
+            script += textwrap.indent(cell['source'], prefix=markdown_prefix, predicate=lambda x: True).rstrip()
+            script += "\n    pass\n"
+        elif cell['cell_type'] == 'code':
+            script += "\nwith herzog.Cell('python'):\n"
+            script += textwrap.indent(cell['source'], prefix=python_prefix).rstrip()
+        else:
+            raise NotImplementedError(f"cell_type not implemented yet: {cell['cell_type']}")
+    return script

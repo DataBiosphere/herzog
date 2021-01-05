@@ -29,7 +29,7 @@ with herzog.Cell("python"):
     comp = dict(c=dict(a="b"))
 
 # Save and restore context. As long as you don't do anything crazy,
-# the program will return to it's previous state after a Sandbox context.
+# the program will return to its previous state after a Sandbox context.
 # This is a good place to put test logic that transforms variables.
 with herzog.Sandbox():
     assert foo == 3
