@@ -59,12 +59,12 @@ def generate(handle: TextIO, source_type: Optional[str] = 'herzog') -> Union[Dic
     else:
         raise NotImplementedError(f'source_type: "{source_type}" not supported.')
 
-def translate_to_ipynb(herzog_handle: TextIO) -> Dict[Any, Any]:
+def translate_to_ipynb(herzog_handle: TextIO, indent: int = 2) -> Dict[Any, Any]:
     cells = [obj.to_ipynb_cell() for obj in parse_cells(herzog_handle)
              if obj.has_ipynb_representation]
     with open(os.path.join(os.path.dirname(__file__), "data", "python_3_boiler.json")) as fh:
         boiler = json.loads(fh.read())
-    ipynb = dict(cells=cells, **boiler)
+    ipynb = json.dumps(dict(cells=cells, **boiler), indent=indent)
     return ipynb
 
 def translate_to_herzog(ipynb_handle: TextIO, indent: int = 4) -> str:

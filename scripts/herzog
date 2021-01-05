@@ -43,7 +43,7 @@ def main(args: Union[List[str]] = None) -> None:
     if len(args) == 1:
         # maintain backwards compatibility
         with open(args[0]) as fh:
-            print(json.dumps(herzog.generate(fh), indent=2))
+            print(herzog.generate(fh))
             exit()
 
     parser = argparse.ArgumentParser(prog='Herzog',
