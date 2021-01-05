@@ -1,10 +1,11 @@
 import os
+import sys
 import json
 from copy import deepcopy
 import __main__
+import textwrap
 from types import ModuleType
-from typing import TextIO
-
+from typing import TextIO, Dict, Any, Iterable, List
 from herzog.parser import parse_cells, CellType
 
 
@@ -38,10 +39,36 @@ class Sandbox:
                     del __main__.__dict__[key]
             __main__.__dict__.update(self._state_modules)
 
-def generate(handle: TextIO):
-    cells = [obj.to_ipynb_cell() for obj in parse_cells(handle)
+def load_ipynb_cells(ipynb: TextIO) -> List[Dict[Any, Any]]:
+    try:
+        return json.loads(ipynb.read())['cells']
+    except (json.JSONDecodeError, KeyError):
+        print(f'Check that "{ipynb}" is a valid ipynb file.', file=sys.stderr)
+        raise
+
+def translate_to_ipynb(herzog_handle: TextIO) -> Dict[str, Any]:
+    cells = [obj.to_ipynb_cell() for obj in parse_cells(herzog_handle)
              if obj.has_ipynb_representation]
     with open(os.path.join(os.path.dirname(__file__), "data", "python_3_boiler.json")) as fh:
         boiler = json.loads(fh.read())
-    ipynb = dict(cells=cells, **boiler)
-    return ipynb
+    return dict(cells=cells, **boiler)
+
+def translate_to_herzog(ipynb_handle: TextIO, indent: int = 4) -> Iterable[str]:
+    cells = load_ipynb_cells(ipynb_handle)
+    python_prefix = ' ' * indent
+    yield 'import herzog\n\n'
+
+    for cell in cells:
+        if isinstance(cell.get('source', None), list):
+            cell['source'] = ''.join(cell['source'])
+
+        if cell['cell_type'] == 'markdown':
+            yield "\nwith herzog.Cell('markdown'):"
+            yield '\n    """\n'
+            yield textwrap.indent(cell['source'], prefix=python_prefix).rstrip()
+            yield '\n    """\n'
+        elif cell['cell_type'] == 'code':
+            yield "\nwith herzog.Cell('python'):\n"
+            yield textwrap.indent(cell['source'], prefix=python_prefix).rstrip()
+        else:
+            raise NotImplementedError(f"cell_type not implemented yet: {cell['cell_type']}")

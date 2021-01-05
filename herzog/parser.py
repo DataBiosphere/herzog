@@ -1,6 +1,6 @@
 import os
 from enum import Enum, auto
-from typing import Generator, Iterable, List, Optional, TextIO
+from typing import Generator, Iterable, List, Optional, TextIO, Dict, Any
 
 
 class CellType(Enum):
@@ -19,23 +19,23 @@ class HerzogCell:
         self.lines: List[str] = list()
         for line in lines:
             if CellType.python == self.cell_type:
-                if "pass" == line:
+                if 'pass' == line:
                     pass
                 elif line.startswith(JUPYTER_SHELL_PFX) or line.startswith(JUPYTER_MAGIC_PFX):
                     self.lines.append(line[1:])
                 else:
                     self.lines.append(line)
             elif CellType.markdown == self.cell_type:
-                if '"""' == line:
+                if line in ('"""', 'pass'):
                     pass
                 else:
                     self.lines.append(line)
 
     @property
-    def has_ipynb_representation(self):
+    def has_ipynb_representation(self) -> bool:
         return self.cell_type in self._translate
 
-    def to_ipynb_cell(self):
+    def to_ipynb_cell(self) -> Dict[str, Any]:
         jupyter_cell = dict(cell_type=self._translate[self.cell_type],
                             metadata=dict(),
                             source=os.linesep.join(self.lines))
@@ -67,7 +67,7 @@ class _RewindableIterator:
         except StopIteration:
             pass
 
-    def rewind(self):
+    def rewind(self) -> None:
         self._rewind = True
 
 def _parse_cell(lines: _RewindableIterator) -> Generator[str, None, None]:
@@ -82,7 +82,7 @@ def _parse_cell(lines: _RewindableIterator) -> Generator[str, None, None]:
         else:
             break
 
-def _validate_cell(cell_lines: List[str], line_number: Optional[int]=None):
+def _validate_cell(cell_lines: List[str], line_number: Optional[int]=None) -> None:
     line_number_str = str(line_number) if line_number is not None else "?"
     if not cell_lines:
         raise SyntaxError(f"line {line_number_str}: Expected Herzog cell content")
@@ -92,12 +92,14 @@ def _validate_cell(cell_lines: List[str], line_number: Optional[int]=None):
         except SyntaxError:
             raise SyntaxError(f"line {line_number_str}")
 
+def parse_cell_type(s: str) -> str:
+    return s.strip()[len("with herzog.Cell("):-len('):')].strip().strip('"').strip("'").strip()
+
 def parse_cells(raw_lines: TextIO) -> Generator[HerzogCell, None, None]:
     rlines = _RewindableIterator(raw_lines)
     for line in rlines:
         if "with herzog.Cell" in line:
-            cell_type_string = line.strip()[len("with herzog.Cell"):].strip('"():')
-            cell_type = CellType[cell_type_string]
+            cell_type = CellType[parse_cell_type(line)]
             line_number = rlines.item_number
             cell_lines = [line for line in _parse_cell(rlines)]
             while cell_lines and not cell_lines[-1]:  # Strip whitespace off end of cell
