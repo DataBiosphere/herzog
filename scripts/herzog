@@ -2,8 +2,6 @@
 import argparse
 import os
 import sys
-import json
-import py_compile
 
 from typing import Union, List
 
@@ -12,29 +10,16 @@ sys.path.insert(0, pkg_root)  # noqa
 
 import herzog
 
-SUPPORTED_SOURCE_TYPES = ['ipynb', 'herzog']
-
 
 def check_file_type(file_name: str) -> str:
     assert os.path.exists(file_name)
-    try:
-        with open(file_name, 'r') as f:
-            metadata = json.loads(f.read())['metadata']
-            assert 'python' in metadata['language_info']['mimetype']  # text/x-python
-            assert metadata['language_info']['version'].startswith('3')
-            return 'ipynb'
-    except Exception:  # noqa
-        pass
-
-    try:
-        py_compile.compile(file_name, doraise=True)
-        with open(file_name, 'r') as f:
-            assert 'import herzog' in f.read()
+    if file_name.endswith('.ipynb'):
+        return 'ipynb'
+    elif file_name.endswith('.py'):
         return 'herzog'
-    except Exception:  # noqa
-        raise RuntimeError(f'Could not determine a supported file type for: {file_name}\n'
-                           f'Please specify a file type with --source-type.  Supported choices are: '
-                           f'{SUPPORTED_SOURCE_TYPES}.  Python 2 is not supported.')
+    else:
+        raise NotImplementedError(f'Unsupported file extension: {file_name}')
+
 
 def main(args: Union[List[str]] = None) -> None:
     if args is None:
@@ -50,16 +35,23 @@ def main(args: Union[List[str]] = None) -> None:
                                      description='Developer tool to translate notebooks to runnable code and '
                                                  'back again, allowing notebooks to be written, reviewed, '
                                                  'and versioned-controlled as normal code.')
-    parser.add_argument('--source', dest='source', type=str,
-                        help="The name of an input file.  You may explicitly provide the file type with "
-                             "--source-type, otherwise one will be inferred.")
-    parser.add_argument('--source-type', dest='source_type', type=str, choices=SUPPORTED_SOURCE_TYPES, default=None,
-                        help=f"The input file type of --source.  If not provided, type will be inferred.  "
-                             f"Supported options: {SUPPORTED_SOURCE_TYPES}")
+    parser.add_argument('--input', '-i', type=str,
+                        help="The name of an input file.  Type will be inferred by the extension ('.ipynb' or '.py').")
+    parser.add_argument('--output', '-o', type=str,
+                        help=f"The name of an input file.  Type will be inferred by the extension "
+                             f"('.ipynb' or '.py').  The type must not be the same as the input type.")
     options = parser.parse_args()
     source_type = options.source_type or check_file_type(options.source)
 
-    with open(options.source, 'r') as fh:
+    input_type = check_file_type(options.input)
+    output_type = check_file_type(options.output)
+
+    if input_type != output_type:
+        raise ValueError(f'File types for input and output are the same.  Please check your file extensions.  '
+                         f'Conversions should be either from a notebook (".ipynb") to herzog (".py") or vice versa.'
+                         f'\nInput: {options.input}\nOutput: {options.output}')
+
+    with open(options.input, 'r') as fh:
         print(herzog.generate(fh, source_type=source_type))
 
 
