@@ -5,7 +5,7 @@ from copy import deepcopy
 import __main__
 import textwrap
 from types import ModuleType
-from typing import TextIO, Dict, Any, Union, Optional
+from typing import TextIO, Dict, Any, Union, Optional, List
 from herzog.parser import parse_cells, CellType
 
 
@@ -39,7 +39,7 @@ class Sandbox:
                     del __main__.__dict__[key]
             __main__.__dict__.update(self._state_modules)
 
-def load_ipynb_cells(ipynb: TextIO) -> Dict[Any, Any]:
+def load_ipynb_cells(ipynb: TextIO) -> List[Dict[Any, Any]]:
     try:
         cells = json.loads(ipynb.read()).get('cells', None)
     except Exception:
@@ -51,7 +51,7 @@ def load_ipynb_cells(ipynb: TextIO) -> Dict[Any, Any]:
         exit()
     return cells
 
-def generate(handle: TextIO, source_type: Optional[str] = 'herzog') -> Union[Dict[Any, Any], str]:
+def generate(handle: TextIO, source_type: Optional[str] = 'herzog') -> str:
     if source_type == 'herzog':
         return translate_to_ipynb(handle)
     elif source_type == 'ipynb':
@@ -59,7 +59,7 @@ def generate(handle: TextIO, source_type: Optional[str] = 'herzog') -> Union[Dic
     else:
         raise NotImplementedError(f'source_type: "{source_type}" not supported.')
 
-def translate_to_ipynb(herzog_handle: TextIO, indent: int = 2) -> Dict[Any, Any]:
+def translate_to_ipynb(herzog_handle: TextIO, indent: int = 2) -> str:
     cells = [obj.to_ipynb_cell() for obj in parse_cells(herzog_handle)
              if obj.has_ipynb_representation]
     with open(os.path.join(os.path.dirname(__file__), "data", "python_3_boiler.json")) as fh:

@@ -3,7 +3,7 @@ import argparse
 import os
 import sys
 
-from typing import Union, List
+from typing import Union, List, Optional
 
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
@@ -21,7 +21,7 @@ def check_file_type(file_name: str) -> str:
         raise NotImplementedError(f'Unsupported file extension: {file_name}')
 
 
-def main(args: Union[List[str]] = None) -> None:
+def main(args: Optional[List[str]] = None) -> None:
     if args is None:
         args = sys.argv[1:]
 
