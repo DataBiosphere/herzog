@@ -12,7 +12,6 @@ pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noq
 sys.path.insert(0, pkg_root)  # noqa
 
 import herzog
-import scripts
 
 
 class TestHerzog(unittest.TestCase):

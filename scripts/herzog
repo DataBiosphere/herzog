@@ -24,7 +24,7 @@ def main(args: Optional[List[str]] = None) -> None:
     if args is None:
         args = sys.argv[1:]
 
-    if len(args) == 1:
+    if len(args) == 1 and args[0] not in ('--help', '-h', '--version', '-v'):
         # maintain backwards compatibility
         with open(args[0]) as fh:
             print(herzog.generate(fh))

@@ -5,7 +5,7 @@ from copy import deepcopy
 import __main__
 import textwrap
 from types import ModuleType
-from typing import TextIO, Dict, Any, Union, Optional, List
+from typing import TextIO, Dict, Any, Optional, List
 from herzog.parser import parse_cells, CellType
 
 
