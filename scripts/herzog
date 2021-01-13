@@ -3,7 +3,7 @@ import argparse
 import os
 import sys
 
-from typing import Union, List, Optional
+from typing import List, Optional
 
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
@@ -12,7 +12,6 @@ import herzog
 
 
 def check_file_type(file_name: str) -> str:
-    assert os.path.exists(file_name)
     if file_name.endswith('.ipynb'):
         return 'ipynb'
     elif file_name.endswith('.py'):
@@ -35,24 +34,28 @@ def main(args: Optional[List[str]] = None) -> None:
                                      description='Developer tool to translate notebooks to runnable code and '
                                                  'back again, allowing notebooks to be written, reviewed, '
                                                  'and versioned-controlled as normal code.')
-    parser.add_argument('--input', '-i', type=str,
-                        help="The name of an input file.  Type will be inferred by the extension ('.ipynb' or '.py').")
-    parser.add_argument('--output', '-o', type=str,
-                        help=f"The name of an input file.  Type will be inferred by the extension "
-                             f"('.ipynb' or '.py').  The type must not be the same as the input type.")
+    subparser = parser.add_subparsers()
+    convert = subparser.add_parser('convert')
+    convert.add_argument('--input', '-i', type=str,
+                         help="The name of an input file.  Type will be inferred by the extension "
+                              "('.ipynb' or '.py').")
+    convert.add_argument('--output', '-o', type=str,
+                         help=f"The name of an input file.  Type will be inferred by the extension "
+                              f"('.ipynb' or '.py').  The type must not be the same as the input type.")
     options = parser.parse_args()
-    source_type = options.source_type or check_file_type(options.source)
 
     input_type = check_file_type(options.input)
+    assert os.path.exists(options.input)
     output_type = check_file_type(options.output)
 
-    if input_type != output_type:
+    if input_type == output_type:
         raise ValueError(f'File types for input and output are the same.  Please check your file extensions.  '
                          f'Conversions should be either from a notebook (".ipynb") to herzog (".py") or vice versa.'
                          f'\nInput: {options.input}\nOutput: {options.output}')
 
-    with open(options.input, 'r') as fh:
-        print(herzog.generate(fh, source_type=source_type))
+    with open(options.input, 'r') as r:
+        with open(options.output, 'w') as w:
+            w.write(herzog.generate(r, input_type=input_type))
 
 
 if __name__ == "__main__":

@@ -6,16 +6,27 @@ import json
 import unittest
 import subprocess
 
+from uuid import uuid4
+
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
 
 import herzog
+import scripts
 
 
 class TestHerzog(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
+
+    def setUp(self) -> None:
+        self.cleanup = []
+
+    def tearDown(self) -> None:
+        for cruft in self.cleanup:
+            if os.path.exists(cruft):
+                os.remove(cruft)
 
     def test_parser(self):
         with open("tests/fixtures/example.py", "r") as fh:
@@ -26,7 +37,63 @@ class TestHerzog(unittest.TestCase):
 
         self.assertEqual(len(expected_cells), len(cells))
         for expected_cell, cell in zip(expected_cells, cells):
-            self.assertEqual(expected_cell, cell)
+
+            # convert all "source" to "string"; equally valid as a list or a string, example:
+            #     '# This is a header\ndoom and gloom\n\n## frank is a gangster\nevidence'
+            #     ['# This is a header\n', 'doom and gloom\n', '\n', '## frank is a gangster\n', 'evidence']
+            if isinstance(expected_cell.get('source', None), list):
+                expected_cell['source'] = ''.join(expected_cell['source'])
+
+            self.assertEqual(expected_cell, cell, f'\n{expected_cell}\n{cell}')
+
+    def test_cli_two_way_conversion(self):
+        """
+        Make sure that if we convert back and forth multiple times, it always gives the same file.
+
+        Note:
+            Content outside of the "with herzog.Cell()" context manager is always lost as it does
+            not become a part of the python notebook.
+        """
+        ipynb_1 = f'tests/fixtures/example.ipynb'
+
+        py_generated_1 = f'delete-{uuid4()}.py'
+        ipynb_generated_2 = f'delete-{uuid4()}.ipynb'
+        py_generated_3 = f'delete-{uuid4()}.py'
+        self.cleanup += [py_generated_1, ipynb_generated_2, py_generated_3]
+
+        with open(ipynb_1) as f:
+            ipynb_1_content = json.loads(f.read())
+            for cell in ipynb_1_content.get('cells', []):
+                # convert all "source" to "string"; equally valid as a list or a string, example:
+                #     '# This is a header\ndoom and gloom\n\n## frank is a gangster\nevidence'
+                #     ['# This is a header\n', 'doom and gloom\n', '\n', '## frank is a gangster\n', 'evidence']
+                if isinstance(cell.get('source', None), list):
+                    cell['source'] = ''.join(cell['source'])
+
+        cmd = ['scripts/herzog', 'convert', '-i', f'{ipynb_1}', '-o', f'{py_generated_1}']
+        subprocess.run(cmd, check=True)
+        with open(py_generated_1) as f:
+            py_generated_1_content = f.read()
+
+        cmd = ['scripts/herzog', 'convert', '-i', f'{py_generated_1}', '-o', f'{ipynb_generated_2}']
+        subprocess.run(cmd, check=True)
+        with open(ipynb_generated_2) as f:
+            ipynb_generated_2_content = json.loads(f.read())
+
+        for ipynb in [ipynb_generated_2_content, ipynb_1_content]:
+            if 'pycharm' in ipynb.get('metadata', {}):
+                # only appears if generated through pycharm
+                del ipynb['metadata']['pycharm']
+
+        assert ipynb_generated_2_content == ipynb_1_content, f'\n\n{ipynb_generated_2_content}\n{ipynb_1_content}'
+
+        cmd = ['scripts/herzog', 'convert', '-i', f'{ipynb_generated_2}', '-o', f'{py_generated_3}']
+        subprocess.run(cmd, check=True)
+        with open(py_generated_3) as f:
+            py_generated_3_content = f.read()
+
+        assert py_generated_1_content == py_generated_3_content
+
 
     def test_parser_errors(self):
         tests = {

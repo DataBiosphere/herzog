@@ -51,13 +51,13 @@ def load_ipynb_cells(ipynb: TextIO) -> List[Dict[Any, Any]]:
         exit()
     return cells
 
-def generate(handle: TextIO, source_type: Optional[str] = 'herzog') -> str:
-    if source_type == 'herzog':
+def generate(handle: TextIO, input_type: Optional[str] = 'herzog') -> str:
+    if input_type == 'herzog':
         return translate_to_ipynb(handle)
-    elif source_type == 'ipynb':
+    elif input_type == 'ipynb':
         return translate_to_herzog(handle)
     else:
-        raise NotImplementedError(f'source_type: "{source_type}" not supported.')
+        raise NotImplementedError(f'source_type: "{input_type}" not supported.')
 
 def translate_to_ipynb(herzog_handle: TextIO, indent: int = 2) -> str:
     cells = [obj.to_ipynb_cell() for obj in parse_cells(herzog_handle)
@@ -74,6 +74,9 @@ def translate_to_herzog(ipynb_handle: TextIO, indent: int = 4) -> str:
     script = 'import herzog\n\n'
 
     for cell in cells:
+        if isinstance(cell.get('source', None), list):
+            cell['source'] = ''.join(cell['source'])
+
         if cell['cell_type'] == 'markdown':
             script += "\nwith herzog.Cell('markdown'):\n"
             script += textwrap.indent(cell['source'], prefix=markdown_prefix, predicate=lambda x: True).rstrip()
