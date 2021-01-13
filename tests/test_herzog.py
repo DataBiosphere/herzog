@@ -6,6 +6,7 @@ import json
 import unittest
 import subprocess
 
+from typing import List
 from uuid import uuid4
 
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
@@ -20,7 +21,7 @@ class TestHerzog(unittest.TestCase):
         cls.maxDiff = None
 
     def setUp(self) -> None:
-        self.cleanup = []
+        self.cleanup: List[str] = []
 
     def tearDown(self) -> None:
         for cruft in self.cleanup:
