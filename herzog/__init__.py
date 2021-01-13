@@ -57,7 +57,7 @@ def generate(handle: TextIO, input_type: Optional[str] = 'herzog') -> str:
     elif input_type == 'ipynb':
         return translate_to_herzog(handle)
     else:
-        raise NotImplementedError(f'source_type: "{input_type}" not supported.')
+        raise NotImplementedError(f'Input type: "{input_type}" not supported.')
 
 def translate_to_ipynb(herzog_handle: TextIO, indent: int = 2) -> str:
     cells = [obj.to_ipynb_cell() for obj in parse_cells(herzog_handle)
