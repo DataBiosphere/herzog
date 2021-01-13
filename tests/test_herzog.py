@@ -53,7 +53,7 @@ class TestHerzog(unittest.TestCase):
             Content outside of the "with herzog.Cell()" context manager is always lost as it does
             not become a part of the python notebook.
         """
-        ipynb_1 = f'tests/fixtures/example.ipynb'
+        ipynb_1 = 'tests/fixtures/example.ipynb'
 
         py_generated_1 = f'delete-{uuid4()}.py'
         ipynb_generated_2 = f'delete-{uuid4()}.ipynb'
@@ -92,7 +92,6 @@ class TestHerzog(unittest.TestCase):
             py_generated_3_content = f.read()
 
         assert py_generated_1_content == py_generated_3_content
-
 
     def test_parser_errors(self):
         tests = {
