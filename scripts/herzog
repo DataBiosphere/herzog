@@ -36,17 +36,18 @@ def main(args: Optional[List[str]] = None) -> None:
                                                  'and versioned-controlled as normal code.')
     subparser = parser.add_subparsers()
     convert = subparser.add_parser('convert')
-    convert.add_argument('--input', '-i', type=str,
+    convert.add_argument('--input', '-i', type=str, required=True,
                          help="The name of an input file.  Type will be inferred by the extension "
                               "('.ipynb' or '.py').")
-    convert.add_argument('--output', '-o', type=str,
-                         help=f"The name of an input file.  Type will be inferred by the extension "
-                              f"('.ipynb' or '.py').  The type must not be the same as the input type.")
+    convert.add_argument('--output', '-o', type=str, required=False, default=None,
+                         help=f"The name of an output file.  Type will be inferred by the extension "
+                              f"('.ipynb' or '.py').  The type must not be the same as the input type.  "
+                              f"If this is not specified, output will be printed to stdout.")
     options = parser.parse_args()
 
     input_type = check_file_type(options.input)
     assert os.path.exists(options.input)
-    output_type = check_file_type(options.output)
+    output_type = check_file_type(options.output) if options.output else None
 
     if input_type == output_type:
         raise ValueError(f'File types for input and output are the same.  Please check your file extensions.  '
@@ -54,8 +55,13 @@ def main(args: Optional[List[str]] = None) -> None:
                          f'\nInput: {options.input}\nOutput: {options.output}')
 
     with open(options.input, 'r') as r:
+        output_file_contents = herzog.generate(r, input_type=input_type)
+
+    if output_type:
         with open(options.output, 'w') as w:
-            w.write(herzog.generate(r, input_type=input_type))
+            w.write(output_file_contents)
+    else:
+        print(output_file_contents)
 
 
 if __name__ == "__main__":

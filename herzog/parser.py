@@ -1,6 +1,6 @@
 import os
 from enum import Enum, auto
-from typing import Generator, Iterable, List, Optional, TextIO
+from typing import Generator, Iterable, List, Optional, TextIO, Dict, Any
 
 
 class CellType(Enum):
@@ -17,27 +17,25 @@ class HerzogCell:
     def __init__(self, cell_type: CellType, lines: Iterable[str]):
         self.cell_type = cell_type
         self.lines: List[str] = list()
+        if lines[-1] == "pass":
+            lines.pop()
         for line in lines:
             if CellType.python == self.cell_type:
-                if "pass" == line:
-                    pass
-                elif line.startswith(JUPYTER_SHELL_PFX) or line.startswith(JUPYTER_MAGIC_PFX):
+                if line.startswith(JUPYTER_SHELL_PFX) or line.startswith(JUPYTER_MAGIC_PFX):
                     self.lines.append(line[1:])
                 else:
                     self.lines.append(line)
             elif CellType.markdown == self.cell_type:
-                if '"""' == line or "pass" == line:
-                    pass
-                elif line.startswith('#'):
+                if line.startswith('#'):
                     self.lines.append(line[1:].strip())
                 else:
                     self.lines.append(line)
 
     @property
-    def has_ipynb_representation(self):
+    def has_ipynb_representation(self) -> bool:
         return self.cell_type in self._translate
 
-    def to_ipynb_cell(self):
+    def to_ipynb_cell(self) -> Dict[str, Any]:
         jupyter_cell = dict(cell_type=self._translate[self.cell_type],
                             metadata=dict(),
                             source=os.linesep.join(self.lines))
@@ -69,7 +67,7 @@ class _RewindableIterator:
         except StopIteration:
             pass
 
-    def rewind(self):
+    def rewind(self) -> None:
         self._rewind = True
 
 def _parse_cell(lines: _RewindableIterator) -> Generator[str, None, None]:
@@ -84,7 +82,7 @@ def _parse_cell(lines: _RewindableIterator) -> Generator[str, None, None]:
         else:
             break
 
-def _validate_cell(cell_lines: List[str], line_number: Optional[int]=None):
+def _validate_cell(cell_lines: List[str], line_number: Optional[int]=None) -> None:
     line_number_str = str(line_number) if line_number is not None else "?"
     if not cell_lines:
         raise SyntaxError(f"line {line_number_str}: Expected Herzog cell content")
