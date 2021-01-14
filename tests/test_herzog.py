@@ -3,6 +3,7 @@ import io
 import os
 import sys
 import json
+import tempfile
 import unittest
 import subprocess
 
@@ -19,14 +20,6 @@ class TestHerzog(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.maxDiff = None
-
-    def setUp(self) -> None:
-        self.cleanup: List[str] = []
-
-    def tearDown(self) -> None:
-        for cruft in self.cleanup:
-            if os.path.exists(cruft):
-                os.remove(cruft)
 
     def test_parser(self):
         with open("tests/fixtures/example.py", "r") as fh:
@@ -56,43 +49,43 @@ class TestHerzog(unittest.TestCase):
         """
         ipynb_0 = 'tests/fixtures/example.ipynb'
 
-        py_generated_1 = f'delete-{uuid4()}.py'
-        ipynb_generated_2 = f'delete-{uuid4()}.ipynb'
-        py_generated_3 = f'delete-{uuid4()}.py'
-        self.cleanup += [py_generated_1, ipynb_generated_2, py_generated_3]
+        with tempfile.TemporaryDirectory() as tempdir:
+            py_generated_1 = os.path.join(tempdir, f'delete-{uuid4()}.py')
+            ipynb_generated_2 = os.path.join(tempdir, f'delete-{uuid4()}.ipynb')
+            py_generated_3 = os.path.join(tempdir, f'delete-{uuid4()}.py')
 
-        with open(ipynb_0) as f:
-            ipynb_0_content = json.loads(f.read())
-            for cell in ipynb_0_content.get('cells', []):
-                # convert all "source" to "string"; equally valid as a list or a string, example:
-                #     '# This is a header\ndoom and gloom\n\n## frank is a gangster\nevidence'
-                #     ['# This is a header\n', 'doom and gloom\n', '\n', '## frank is a gangster\n', 'evidence']
-                if isinstance(cell.get('source', None), list):
-                    cell['source'] = ''.join(cell['source'])
+            with open(ipynb_0) as f:
+                ipynb_0_content = json.loads(f.read())
+                for cell in ipynb_0_content.get('cells', []):
+                    # convert all "source" to "string"; equally valid as a list or a string, example:
+                    #     '# This is a header\ndoom and gloom\n\n## frank is a gangster\nevidence'
+                    #     ['# This is a header\n', 'doom and gloom\n', '\n', '## frank is a gangster\n', 'evidence']
+                    if isinstance(cell.get('source', None), list):
+                        cell['source'] = ''.join(cell['source'])
 
-        cmd = ['scripts/herzog', 'convert', '-i', f'{ipynb_0}', '-o', f'{py_generated_1}']
-        subprocess.run(cmd, check=True)
-        with open(py_generated_1) as f:
-            py_generated_1_content = f.read()
+            cmd = ['scripts/herzog', 'convert', '-i', f'{ipynb_0}', '-o', f'{py_generated_1}']
+            subprocess.run(cmd, check=True)
+            with open(py_generated_1) as f:
+                py_generated_1_content = f.read()
 
-        cmd = ['scripts/herzog', 'convert', '-i', f'{py_generated_1}', '-o', f'{ipynb_generated_2}']
-        subprocess.run(cmd, check=True)
-        with open(ipynb_generated_2) as f:
-            ipynb_generated_2_content = json.loads(f.read())
+            cmd = ['scripts/herzog', 'convert', '-i', f'{py_generated_1}', '-o', f'{ipynb_generated_2}']
+            subprocess.run(cmd, check=True)
+            with open(ipynb_generated_2) as f:
+                ipynb_generated_2_content = json.loads(f.read())
 
-        for ipynb in [ipynb_generated_2_content, ipynb_0_content]:
-            if 'pycharm' in ipynb.get('metadata', {}):
-                # only appears if generated through pycharm
-                del ipynb['metadata']['pycharm']
+            for ipynb in [ipynb_generated_2_content, ipynb_0_content]:
+                if 'pycharm' in ipynb.get('metadata', {}):
+                    # only appears if generated through pycharm
+                    del ipynb['metadata']['pycharm']
 
-        assert ipynb_generated_2_content == ipynb_0_content, f'\n\n{ipynb_generated_2_content}\n{ipynb_0_content}'
+            assert ipynb_generated_2_content == ipynb_0_content, f'\n\n{ipynb_generated_2_content}\n{ipynb_0_content}'
 
-        cmd = ['scripts/herzog', 'convert', '-i', f'{ipynb_generated_2}', '-o', f'{py_generated_3}']
-        subprocess.run(cmd, check=True)
-        with open(py_generated_3) as f:
-            py_generated_3_content = f.read()
+            cmd = ['scripts/herzog', 'convert', '-i', f'{ipynb_generated_2}', '-o', f'{py_generated_3}']
+            subprocess.run(cmd, check=True)
+            with open(py_generated_3) as f:
+                py_generated_3_content = f.read()
 
-        assert py_generated_1_content == py_generated_3_content
+            assert py_generated_1_content == py_generated_3_content
 
     def test_parser_errors(self):
         tests = {
