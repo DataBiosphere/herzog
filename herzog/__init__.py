@@ -78,4 +78,10 @@ def translate_to_herzog(ipynb_handle: TextIO, indent: int = 4) -> Iterable[str]:
                 else:
                     yield line + '\n'
         else:
-            raise NotImplementedError(f"cell_type not implemented yet: {cell['cell_type']}")
+            print(f"cell_type not implemented yet: {cell['cell_type']}", file=sys.stderr)
+            # warn the user and wrap in a quote as we would with markdown
+            s = f'\nwith herzog.Cell("{cell["cell_type"]}"):\n    """\n'
+            s += textwrap.indent(cell['source'], prefix=prefix).rstrip()
+            s += '\n    """\n'
+            for line in s.split('\n'):
+                yield line + '\n'
