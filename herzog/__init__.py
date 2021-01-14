@@ -55,7 +55,7 @@ def translate_to_ipynb(herzog_handle: TextIO) -> Dict[str, Any]:
 
 def translate_to_herzog(ipynb_handle: TextIO, indent: int = 4) -> Iterable[str]:
     cells = load_ipynb_cells(ipynb_handle)
-    python_prefix = ' ' * indent
+    prefix = ' ' * indent
     yield 'import herzog\n\n'
 
     for cell in cells:
@@ -65,10 +65,13 @@ def translate_to_herzog(ipynb_handle: TextIO, indent: int = 4) -> Iterable[str]:
         if cell['cell_type'] == 'markdown':
             yield "\nwith herzog.Cell('markdown'):"
             yield '\n    """\n'
-            yield textwrap.indent(cell['source'], prefix=python_prefix).rstrip()
+            if cell['source'].startswith('%') or cell['source'].startswith('!'):
+                yield textwrap.indent('#' + cell['source'], prefix=prefix).rstrip()
+            else:
+                yield textwrap.indent(cell['source'], prefix=prefix).rstrip()
             yield '\n    """\n'
         elif cell['cell_type'] == 'code':
             yield "\nwith herzog.Cell('python'):\n"
-            yield textwrap.indent(cell['source'], prefix=python_prefix).rstrip()
+            yield textwrap.indent(cell['source'], prefix=prefix).rstrip()
         else:
             raise NotImplementedError(f"cell_type not implemented yet: {cell['cell_type']}")
