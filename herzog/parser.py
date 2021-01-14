@@ -19,14 +19,14 @@ class HerzogCell:
         self.lines: List[str] = list()
         for line in lines:
             if CellType.python == self.cell_type:
-                if 'pass' == line:
+                if "pass" == line:
                     pass
                 elif line.startswith(JUPYTER_SHELL_PFX) or line.startswith(JUPYTER_MAGIC_PFX):
                     self.lines.append(line[1:])
                 else:
                     self.lines.append(line)
             elif CellType.markdown == self.cell_type:
-                if line in ('"""', 'pass'):
+                if '"""' == line:
                     pass
                 else:
                     self.lines.append(line)
@@ -67,7 +67,7 @@ class _RewindableIterator:
         except StopIteration:
             pass
 
-    def rewind(self) -> None:
+    def rewind(self):
         self._rewind = True
 
 def _parse_cell(lines: _RewindableIterator) -> Generator[str, None, None]:
@@ -82,7 +82,7 @@ def _parse_cell(lines: _RewindableIterator) -> Generator[str, None, None]:
         else:
             break
 
-def _validate_cell(cell_lines: List[str], line_number: Optional[int]=None) -> None:
+def _validate_cell(cell_lines: List[str], line_number: Optional[int]=None):
     line_number_str = str(line_number) if line_number is not None else "?"
     if not cell_lines:
         raise SyntaxError(f"line {line_number_str}: Expected Herzog cell content")
@@ -93,7 +93,16 @@ def _validate_cell(cell_lines: List[str], line_number: Optional[int]=None) -> No
             raise SyntaxError(f"line {line_number_str}")
 
 def parse_cell_type(s: str) -> str:
-    return s.strip()[len("with herzog.Cell("):-len('):')].strip().strip('"').strip("'").strip()
+    # TODO: Make this account for other valid cases like comments or multi-line, for example:
+    # with herzog.Cell(
+    #     'python'
+    # )
+    #
+    # or
+    #
+    # with herzog.Cell('python'):  # noqa
+    #
+    return s.strip()[len("with herzog.Cell("):-len("):")].strip().strip('"').strip("'").strip()
 
 def parse_cells(raw_lines: TextIO) -> Generator[HerzogCell, None, None]:
     rlines = _RewindableIterator(raw_lines)

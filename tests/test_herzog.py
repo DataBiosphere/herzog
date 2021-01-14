@@ -7,7 +7,6 @@ import tempfile
 import unittest
 import subprocess
 
-from typing import List
 from uuid import uuid4
 
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
@@ -30,13 +29,6 @@ class TestHerzog(unittest.TestCase):
 
         self.assertEqual(len(expected_cells), len(cells))
         for expected_cell, cell in zip(expected_cells, cells):
-
-            # convert all "source" to "string"; equally valid as a list or a string, example:
-            #     '# This is a header\ndoom and gloom\n\n## frank is a gangster\nevidence'
-            #     ['# This is a header\n', 'doom and gloom\n', '\n', '## frank is a gangster\n', 'evidence']
-            if isinstance(expected_cell.get('source', None), list):
-                expected_cell['source'] = ''.join(expected_cell['source'])
-
             self.assertEqual(expected_cell, cell, f'\n{expected_cell}\n{cell}')
 
     def test_cli_two_way_conversion(self):
@@ -56,12 +48,6 @@ class TestHerzog(unittest.TestCase):
 
             with open(ipynb_0) as f:
                 ipynb_0_content = json.loads(f.read())
-                for cell in ipynb_0_content.get('cells', []):
-                    # convert all "source" to "string"; equally valid as a list or a string, example:
-                    #     '# This is a header\ndoom and gloom\n\n## frank is a gangster\nevidence'
-                    #     ['# This is a header\n', 'doom and gloom\n', '\n', '## frank is a gangster\n', 'evidence']
-                    if isinstance(cell.get('source', None), list):
-                        cell['source'] = ''.join(cell['source'])
 
             cmd = ['scripts/herzog', 'convert', '-i', f'{ipynb_0}', '-o', f'{py_generated_1}']
             subprocess.run(cmd, check=True)
