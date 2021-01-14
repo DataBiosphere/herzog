@@ -39,9 +39,6 @@ def main(args: Optional[List[str]] = None) -> None:
 
     assert os.path.exists(options.input)
 
-    if input_type == output_type:
-        raise ValueError
-
     with open(options.input, 'r') as r:
         if options.input.endswith('.py') and (options.output.endswith('.ipynb') or options.output is None):
             output_file_contents = json.dumps(herzog.translate_to_ipynb(r), indent=2)
@@ -52,7 +49,7 @@ def main(args: Optional[List[str]] = None) -> None:
                 f'File types for input and output are not supported and/or compatible '
                 f'(must be .py -> .ipynb or vice versa).\nInput: {options.input}\nOutput: {options.output}')
 
-    if output_type:
+    if options.output:
         with open(options.output, 'w') as w:
             w.write(output_file_contents)
     else:
