@@ -94,12 +94,23 @@ def _validate_cell(cell_lines: List[str], line_number: Optional[int]=None):
         except SyntaxError:
             raise SyntaxError(f"line {line_number_str}")
 
+def parse_cell_type(s: str) -> str:
+    # TODO: Make this account for other valid cases like comments or multi-line, for example:
+    # with herzog.Cell(
+    #     'python'
+    # )
+    #
+    # or
+    #
+    # with herzog.Cell('python'):  # noqa
+    #
+    return s.strip()[len("with herzog.Cell("):-len('):')].strip().strip('"').strip("'").strip()
+
 def parse_cells(raw_lines: TextIO) -> Generator[HerzogCell, None, None]:
     rlines = _RewindableIterator(raw_lines)
     for line in rlines:
         if "with herzog.Cell" in line:
-            cell_type_string = line.strip()[len("with herzog.Cell"):].strip('"():')
-            cell_type = CellType[cell_type_string]
+            cell_type = CellType[parse_cell_type(line)]
             line_number = rlines.item_number
             cell_lines = [line for line in _parse_cell(rlines)]
             while cell_lines and not cell_lines[-1]:  # Strip whitespace off end of cell

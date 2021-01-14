@@ -19,7 +19,7 @@ with herzog.Cell("markdown"):
 # be included in a cell. This is a good place for dev notes that should
 # not be included in published notebooks.
 
-with herzog.Cell("python"):
+with herzog.Cell('python'):
     import os
     print("blaksdjf")
     foo = 3
