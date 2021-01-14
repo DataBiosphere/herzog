@@ -111,9 +111,9 @@ class TestHerzog(unittest.TestCase):
         return [cell.to_ipynb_cell() for cell in herzog.parse_cells(io.StringIO(content))
                 if cell.has_ipynb_representation]
 
-    def test_generate(self):
+    def test_translate_to_ipynb(self):
         with open("tests/fixtures/example.py") as fh:
-            herzog.generate(fh)
+            herzog.translate_to_ipynb(fh)
 
 
 if __name__ == '__main__':

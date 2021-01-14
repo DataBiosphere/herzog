@@ -17,17 +17,17 @@ class HerzogCell:
     def __init__(self, cell_type: CellType, lines: Iterable[str]):
         self.cell_type = cell_type
         self.lines: List[str] = list()
-        if lines[-1] == "pass":
-            lines.pop()
         for line in lines:
             if CellType.python == self.cell_type:
-                if line.startswith(JUPYTER_SHELL_PFX) or line.startswith(JUPYTER_MAGIC_PFX):
+                if 'pass' == line:
+                    pass
+                elif line.startswith(JUPYTER_SHELL_PFX) or line.startswith(JUPYTER_MAGIC_PFX):
                     self.lines.append(line[1:])
                 else:
                     self.lines.append(line)
             elif CellType.markdown == self.cell_type:
-                if line.startswith('#'):
-                    self.lines.append(line[1:].strip())
+                if line in ('"""', 'pass'):
+                    pass
                 else:
                     self.lines.append(line)
 

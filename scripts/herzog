@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import json
 import os
 import sys
 
@@ -27,7 +28,7 @@ def main(args: Optional[List[str]] = None) -> None:
     if len(args) == 1 and args[0] not in ('--help', '-h', '--version', '-v'):
         # maintain backwards compatibility
         with open(args[0]) as fh:
-            print(herzog.generate(fh))
+            print(json.dumps(herzog.translate_to_ipynb(fh), indent=2))
             exit()
 
     parser = argparse.ArgumentParser(prog='Herzog',
@@ -55,7 +56,12 @@ def main(args: Optional[List[str]] = None) -> None:
                          f'\nInput: {options.input}\nOutput: {options.output}')
 
     with open(options.input, 'r') as r:
-        output_file_contents = herzog.generate(r, input_type=input_type)
+        if input_type == 'herzog':
+            output_file_contents = json.dumps(herzog.translate_to_ipynb(r), indent=2)
+        elif input_type == 'ipynb':
+            output_file_contents = ''.join([line for line in herzog.translate_to_herzog(r)])
+        else:
+            raise NotImplementedError(f'Input type: "{input_type}" not supported.')
 
     if output_type:
         with open(options.output, 'w') as w:

@@ -8,12 +8,13 @@ import herzog
 
 
 with herzog.Cell("markdown"):
-    # # This is a header
-    # doom and gloom
+    """
+    # This is a header
+    doom and gloom
 
-    # ## frank is a gangster
-    # evidence
-    pass
+    ## frank is a gangster
+    evidence
+    """
 
 # Anything placed outside of a Cell context manager will not
 # be included in a cell. This is a good place for dev notes that should
