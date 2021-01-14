@@ -12,7 +12,7 @@ sys.path.insert(0, pkg_root)  # noqa
 import herzog
 
 
-def main(args: Optional[List[str]] = None) -> None:
+def main(args: Optional[List[str]] = None):
     if args is None:
         args = sys.argv[1:]
 

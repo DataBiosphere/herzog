@@ -6,7 +6,7 @@ import __main__
 import textwrap
 from types import ModuleType
 from typing import TextIO, Dict, Any, Iterable, List
-from herzog.parser import parse_cells, CellType
+from herzog.parser import parse_cells, CellType, JUPYTER_SHELL_PFX, JUPYTER_MAGIC_PFX
 
 
 class Cell:
@@ -72,7 +72,8 @@ def translate_to_herzog(ipynb_handle: TextIO, indent: int = 4) -> Iterable[str]:
             s = "\nwith herzog.Cell('python'):\n"
             s += textwrap.indent(cell['source'], prefix=prefix).rstrip()
             for line in s.split('\n'):
-                if line.startswith('%') or line.startswith('!'):
+                if line.startswith(JUPYTER_SHELL_PFX.replace('#', '', 1)) or \
+                        line.startswith(JUPYTER_MAGIC_PFX.replace('#', '', 1)):
                     yield '#' + line + '\n'
                 else:
                     yield line + '\n'

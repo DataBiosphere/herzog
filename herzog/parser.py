@@ -19,7 +19,7 @@ class HerzogCell:
         self.lines: List[str] = list()
         for line in lines:
             if CellType.python == self.cell_type:
-                if 'pass' == line:
+                if "pass" == line:
                     pass
                 elif line.startswith(JUPYTER_SHELL_PFX) or line.startswith(JUPYTER_MAGIC_PFX):
                     self.lines.append(line[1:])
@@ -82,7 +82,7 @@ def _parse_cell(lines: _RewindableIterator) -> Generator[str, None, None]:
         else:
             break
 
-def _validate_cell(cell_lines: List[str], line_number: Optional[int]=None) -> None:
+def _validate_cell(cell_lines: List[str], line_number: Optional[int]=None):
     line_number_str = str(line_number) if line_number is not None else "?"
     if not cell_lines:
         raise SyntaxError(f"line {line_number_str}: Expected Herzog cell content")
