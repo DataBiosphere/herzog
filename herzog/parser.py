@@ -26,7 +26,7 @@ class HerzogCell:
                 else:
                     self.lines.append(line)
             elif CellType.markdown == self.cell_type:
-                if line in ('"""', 'pass'):
+                if line in ('"""', "pass"):
                     pass
                 else:
                     self.lines.append(line)
@@ -102,7 +102,7 @@ def parse_cell_type(s: str) -> str:
     #
     # with herzog.Cell('python'):  # noqa
     #
-    return s.strip()[len("with herzog.Cell("):-len('):')].strip().strip('"').strip("'").strip()
+    return s.strip()[len("with herzog.Cell("):-len("):")].strip().strip('"').strip("'").strip()
 
 def parse_cells(raw_lines: TextIO) -> Generator[HerzogCell, None, None]:
     rlines = _RewindableIterator(raw_lines)

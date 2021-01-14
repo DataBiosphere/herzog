@@ -43,7 +43,7 @@ def load_ipynb_cells(ipynb: TextIO) -> List[Dict[Any, Any]]:
     try:
         return json.loads(ipynb.read())['cells']
     except (json.JSONDecodeError, KeyError):
-        print(f'Check that "{ipynb}" is a valid ipynb file.', file=sys.stderr)
+        print(f"Check that '{ipynb}' is a valid ipynb file.", file=sys.stderr)
         raise
 
 def translate_to_ipynb(herzog_handle: TextIO) -> Dict[str, Any]:
@@ -56,32 +56,32 @@ def translate_to_ipynb(herzog_handle: TextIO) -> Dict[str, Any]:
 def translate_to_herzog(ipynb_handle: TextIO, indent: int = 4) -> Iterable[str]:
     cells = load_ipynb_cells(ipynb_handle)
     prefix = ' ' * indent
-    yield 'import herzog\n\n'
+    yield "import herzog\n\n"
 
     for cell in cells:
         if isinstance(cell.get('source', None), list):
-            cell['source'] = ''.join(cell['source'])
+            cell['source'] = "".join(cell['source'])
 
-        if cell['cell_type'] == 'markdown':
+        if cell['cell_type'] == "markdown":
             s = '\nwith herzog.Cell("markdown"):\n    """\n'
             s += textwrap.indent(cell['source'], prefix=prefix).rstrip()
             s += '\n    """\n'
             for line in s.split('\n'):
-                yield line + '\n'
-        elif cell['cell_type'] == 'code':
+                yield line + "\n"
+        elif cell['cell_type'] == "code":
             s = "\nwith herzog.Cell('python'):\n"
             s += textwrap.indent(cell['source'], prefix=prefix).rstrip()
-            for line in s.split('\n'):
-                if line.startswith(JUPYTER_SHELL_PFX.replace('#', '', 1)) or \
-                        line.startswith(JUPYTER_MAGIC_PFX.replace('#', '', 1)):
-                    yield '#' + line + '\n'
+            for line in s.split("\n"):
+                if line.startswith(JUPYTER_SHELL_PFX.replace("#", "", 1)) or \
+                        line.startswith(JUPYTER_MAGIC_PFX.replace("#", "", 1)):
+                    yield "#" + line + "\n"
                 else:
-                    yield line + '\n'
+                    yield line + "\n"
         else:
             print(f"cell_type not implemented yet: {cell['cell_type']}", file=sys.stderr)
             # warn the user and wrap in a quote as we would with markdown
             s = f'\nwith herzog.Cell("{cell["cell_type"]}"):\n    """\n'
             s += textwrap.indent(cell['source'], prefix=prefix).rstrip()
             s += '\n    """\n'
-            for line in s.split('\n'):
-                yield line + '\n'
+            for line in s.split("\n"):
+                yield line + "\n"
