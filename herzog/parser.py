@@ -67,7 +67,7 @@ class _RewindableIterator:
         except StopIteration:
             pass
 
-    def rewind(self) -> None:
+    def rewind(self):
         self._rewind = True
 
 def _parse_cell(lines: _RewindableIterator) -> Generator[str, None, None]:
