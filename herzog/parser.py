@@ -14,9 +14,11 @@ JUPYTER_MAGIC_PFX = "#%"
 class HerzogCell:
     _translate = {CellType.python: "code", CellType.markdown: "markdown"}
 
-    def __init__(self, cell_type: CellType, lines: Iterable[str]):
+    def __init__(self, cell_type: CellType, lines: List[str]):
         self.cell_type = cell_type
         self.lines: List[str] = list()
+        if lines[-1] == "pass":
+            lines.pop()
         for line in lines:
             if CellType.python == self.cell_type:
                 if "pass" == line:
@@ -26,8 +28,8 @@ class HerzogCell:
                 else:
                     self.lines.append(line)
             elif CellType.markdown == self.cell_type:
-                if '"""' == line:
-                    pass
+                if line.startswith('#'):
+                    self.lines.append(line[1:].strip())
                 else:
                     self.lines.append(line)
 
