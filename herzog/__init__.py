@@ -55,7 +55,7 @@ def translate_to_ipynb(herzog_handle: TextIO) -> Dict[str, Any]:
 
 def translate_to_herzog(ipynb_handle: TextIO, indent: int = 4) -> Iterable[str]:
     cells = load_ipynb_cells(ipynb_handle)
-    prefix = ' ' * indent
+    prefix = " " * indent
     yield "import herzog\n\n"
 
     for cell in cells:
