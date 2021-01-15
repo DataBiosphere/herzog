@@ -29,13 +29,6 @@ class TestHerzog(unittest.TestCase):
 
         self.assertEqual(len(expected_cells), len(cells))
         for expected_cell, cell in zip(expected_cells, cells):
-
-            # convert all "source" to "string"; equally valid as a list or a string, example:
-            #     '# This is a header\ndoom and gloom\n\n## frank is a gangster\nevidence'
-            #     ['# This is a header\n', 'doom and gloom\n', '\n', '## frank is a gangster\n', 'evidence']
-            if isinstance(expected_cell.get('source', None), list):
-                expected_cell['source'] = ''.join(expected_cell['source'])
-
             self.assertEqual(expected_cell, cell, f'\n{expected_cell}\n{cell}')
 
     def test_cli_two_way_conversion(self):
