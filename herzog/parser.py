@@ -26,7 +26,7 @@ class HerzogCell:
                 else:
                     self.lines.append(line)
             elif CellType.markdown == self.cell_type:
-                if '"""' == line:
+                if line in ('"""', "pass"):
                     pass
                 else:
                     self.lines.append(line)
