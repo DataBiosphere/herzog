@@ -23,9 +23,8 @@ def main(args: Optional[List[str]] = None):
             exit()
 
     parser = argparse.ArgumentParser(prog="Herzog",
-                                     description="Developer tool to translate notebooks to runnable code and "
-                                                 "back again, allowing notebooks to be written, reviewed, "
-                                                 "and versioned-controlled as normal code.")
+                                     description="Convert Herzog formatted Python scripting to "
+                                                 "iPython .ipynb files, and back again.")
     subparser = parser.add_subparsers()
     convert = subparser.add_parser("convert")
     convert.add_argument("--input", "-i", type=str, required=True,
