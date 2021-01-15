@@ -35,7 +35,7 @@ def main(args: Optional[List[str]] = None):
                          help=f"The name of an output file.  Type will be inferred by the extension "
                               f"('.ipynb' or '.py').  The type must not be the same as the input type.  "
                               f"If this is not specified, output will be printed to stdout.")
-    options = parser.parse_args()
+    options = parser.parse_args(args)
 
     assert os.path.exists(options.input)
 
