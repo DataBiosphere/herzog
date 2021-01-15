@@ -73,8 +73,8 @@ def translate_to_herzog(ipynb_handle: TextIO, indent: int = 4) -> Generator[str,
             for line in s.split("\n"):
                 if line.startswith("%"):
                     yield line.replace("%", JUPYTER_MAGIC_PFX, 1) + "\n"
-                elif line.startswith("#"):
-                    yield line.replace("#", JUPYTER_SHELL_PFX, 1) + "\n"
+                elif line.startswith("!"):
+                    yield line.replace("!", JUPYTER_SHELL_PFX, 1) + "\n"
                 else:
                     yield line + "\n"
         else:
