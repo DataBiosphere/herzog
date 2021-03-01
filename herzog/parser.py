@@ -44,67 +44,6 @@ class HerzogCell:
             jupyter_cell.update(dict(execution_count=None, outputs=list()))
         return jupyter_cell
 
-class _RewindableIterator:
-    def __init__(self, iterable: Iterable):
-        self._iterable = iterable
-        self._prev: Optional[str] = None
-        self._rewind = False
-        self.item_number = 0
-
-    def __next__(self):
-        if self._rewind and self._prev is not None:
-            item = self._prev
-            self._rewind = False
-        else:
-            item = next(self._iterable)
-            self._prev = item
-            self.item_number += 1
-        return item
-
-    def __iter__(self):
-        try:
-            while True:
-                yield next(self)
-        except StopIteration:
-            pass
-
-    def rewind(self):
-        self._rewind = True
-
-def _parse_cell(lines: _RewindableIterator) -> Generator[str, None, None]:
-    indent: Optional[str] = None
-    for line in lines:
-        if indent is None:
-            indent = line.replace(line.lstrip(), "")
-        if not line.strip():
-            yield ""  # allow vertical whitespace
-        elif line.startswith(indent):
-            yield line.rstrip()[len(indent):]
-        else:
-            break
-
-def _validate_cell(cell_lines: List[str], line_number: Optional[int]=None):
-    line_number_str = str(line_number) if line_number is not None else "?"
-    if not cell_lines:
-        raise SyntaxError(f"line {line_number_str}: Expected Herzog cell content")
-    else:
-        try:
-            compile(os.linesep.join(cell_lines), "", "exec")
-        except SyntaxError:
-            raise SyntaxError(f"line {line_number_str}")
-
-def parse_cell_type(s: str) -> str:
-    # TODO: Make this account for other valid cases like comments or multi-line, for example:
-    # with herzog.Cell(
-    #     'python'
-    # )
-    #
-    # or
-    #
-    # with herzog.Cell('python'):  # noqa
-    #
-    return s.strip()[len("with herzog.Cell("):-len("):")].strip().strip('"').strip("'").strip()
-
 def parse_cells(raw_lines: TextIO) -> Generator[HerzogCell, None, None]:
     lines = [line for line in raw_lines]
     for node in ast.walk(ast.parse(''.join(lines))):
