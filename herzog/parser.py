@@ -15,22 +15,25 @@ JUPYTER_MAGIC_PFX = "#%"
 class HerzogCell:
     _translate = {CellType.python: "code", CellType.markdown: "markdown"}
 
-    def __init__(self, cell_type: CellType, lines: Iterable[str]):
+    def __init__(self, cell_type: CellType, node: ast.AST, lines: List[str]):
         self.cell_type = cell_type
         self.lines: List[str] = list()
-        for line in lines:
-            if CellType.python == self.cell_type:
+        indent = node.body[0].col_offset  # type: ignore
+
+        if CellType.python == self.cell_type:
+            lines = [line[indent:].rstrip()
+                     for line in lines[node.body[0].lineno - 1: node.body[-1].end_lineno]]  # type: ignore
+            for line in lines:
                 if "pass" == line:
                     pass
                 elif line.startswith(JUPYTER_SHELL_PFX) or line.startswith(JUPYTER_MAGIC_PFX):
                     self.lines.append(line[1:])
                 else:
                     self.lines.append(line)
-            elif CellType.markdown == self.cell_type:
-                if line in ('"""', "pass"):
-                    pass
-                else:
-                    self.lines.append(line)
+        elif CellType.markdown == self.cell_type:
+            assert isinstance(node.body[0], ast.Expr), f"Unable to parse line {node.body[0].lineno}"  # type: ignore
+            content_lines = node.body[0].value.value.strip().split(os.linesep)  # type: ignore
+            self.lines.extend([content_lines[0]] + [line[indent:] for line in content_lines[1:]])
 
     @property
     def has_ipynb_representation(self) -> bool:
@@ -48,11 +51,8 @@ def parse_cells(raw_lines: TextIO) -> Generator[HerzogCell, None, None]:
     lines = [line for line in raw_lines]
     for node in ast.walk(ast.parse(''.join(lines))):
         if isinstance(node, ast.With):
-            indent = node.body[0].col_offset
             if node.items and isinstance(node.items[0].context_expr, ast.Call) and node.items[0].context_expr.args:
                 ast_call = node.items[0].context_expr
                 if "herzog" == ast_call.func.value.id and "Cell" == ast_call.func.attr:  # type: ignore
                     cell_type = CellType[ast_call.args[0].value]  # type: ignore
-                    cell_lines = [line[indent:].rstrip()
-                                  for line in lines[node.body[0].lineno - 1: node.body[-1].end_lineno]]
-                    yield HerzogCell(cell_type, cell_lines)
+                    yield HerzogCell(cell_type, node, lines)
