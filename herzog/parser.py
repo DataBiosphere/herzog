@@ -1,4 +1,5 @@
 import os
+import ast
 from enum import Enum, auto
 from typing import Generator, Iterable, List, Optional, TextIO, Dict, Any
 
@@ -105,14 +106,14 @@ def parse_cell_type(s: str) -> str:
     return s.strip()[len("with herzog.Cell("):-len("):")].strip().strip('"').strip("'").strip()
 
 def parse_cells(raw_lines: TextIO) -> Generator[HerzogCell, None, None]:
-    rlines = _RewindableIterator(raw_lines)
-    for line in rlines:
-        if "with herzog.Cell" in line:
-            cell_type = CellType[parse_cell_type(line)]
-            line_number = rlines.item_number
-            cell_lines = [line for line in _parse_cell(rlines)]
-            while cell_lines and not cell_lines[-1]:  # Strip whitespace off end of cell
-                cell_lines.pop()
-            _validate_cell(cell_lines, line_number)
-            rlines.rewind()
-            yield HerzogCell(cell_type, cell_lines)
+    lines = [line for line in raw_lines]
+    for node in ast.walk(ast.parse(''.join(lines))):
+        if isinstance(node, ast.With):
+            indent = node.body[0].col_offset
+            if node.items and isinstance(node.items[0].context_expr, ast.Call) and node.items[0].context_expr.args:
+                ast_call = node.items[0].context_expr
+                if "herzog" == ast_call.func.value.id and "Cell" == ast_call.func.attr:  # type: ignore
+                    cell_type = CellType[ast_call.args[0].value]  # type: ignore
+                    cell_lines = [line[indent:].rstrip()
+                                  for line in lines[node.body[0].lineno - 1: node.body[-1].end_lineno]]
+                    yield HerzogCell(cell_type, cell_lines)
