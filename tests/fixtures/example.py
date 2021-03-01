@@ -8,6 +8,7 @@ import herzog
 
 
 with herzog.Cell("markdown"):
+
     """
     # This is a header
     doom and gloom
@@ -36,12 +37,14 @@ with herzog.Sandbox():
     doom = "gloom"
     comp["c"]["a"] = "You should not see this message."
 
-with herzog.Cell("python"):
+with herzog.Cell("python"):  # noqa
     foo += 21
     print(os.path)
     print(doom)
     print(comp)
-with herzog.Cell("python"):
+with herzog.Cell(
+    "python"
+):
     """
     bad style
     """
