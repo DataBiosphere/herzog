@@ -31,6 +31,9 @@ class TestHerzog(unittest.TestCase):
         for expected_cell, cell in zip(expected_cells, cells):
             self.assertEqual(expected_cell, cell, f'\n{expected_cell}\n{cell}')
 
+        # with open('/home/quokka/git/herzog/scripts/awddwa', 'w') as f:
+        #     f.write('anything')
+
     def test_cli_two_way_conversion(self):
         """
         Make sure that if we convert back and forth multiple times, it always gives the same file.
@@ -39,39 +42,38 @@ class TestHerzog(unittest.TestCase):
             Content outside of the "with herzog.Cell()" context manager is always lost as it does
             not become a part of the python notebook.
         """
-        ipynb_0 = 'tests/fixtures/example.ipynb'
+        for ipynb_0 in ['tests/fixtures/edgecases.ipynb', 'tests/fixtures/example.ipynb']:
+            with tempfile.TemporaryDirectory() as tempdir:
+                py_generated_1 = os.path.join(tempdir, f'delete-{uuid4()}.py')
+                ipynb_generated_2 = os.path.join(tempdir, f'delete-{uuid4()}.ipynb')
+                py_generated_3 = os.path.join(tempdir, f'delete-{uuid4()}.py')
 
-        with tempfile.TemporaryDirectory() as tempdir:
-            py_generated_1 = os.path.join(tempdir, f'delete-{uuid4()}.py')
-            ipynb_generated_2 = os.path.join(tempdir, f'delete-{uuid4()}.ipynb')
-            py_generated_3 = os.path.join(tempdir, f'delete-{uuid4()}.py')
+                with open(ipynb_0) as f:
+                    ipynb_0_content = json.loads(f.read())
 
-            with open(ipynb_0) as f:
-                ipynb_0_content = json.loads(f.read())
+                cmd = ['scripts/herzog', 'convert', '-i', f'{ipynb_0}', '-o', f'{py_generated_1}']
+                subprocess.run(cmd, check=True)
+                with open(py_generated_1) as f:
+                    py_generated_1_content = f.read()
 
-            cmd = ['scripts/herzog', 'convert', '-i', f'{ipynb_0}', '-o', f'{py_generated_1}']
-            subprocess.run(cmd, check=True)
-            with open(py_generated_1) as f:
-                py_generated_1_content = f.read()
+                cmd = ['scripts/herzog', 'convert', '-i', f'{py_generated_1}', '-o', f'{ipynb_generated_2}']
+                subprocess.run(cmd, check=True)
+                with open(ipynb_generated_2) as f:
+                    ipynb_generated_2_content = json.loads(f.read())
 
-            cmd = ['scripts/herzog', 'convert', '-i', f'{py_generated_1}', '-o', f'{ipynb_generated_2}']
-            subprocess.run(cmd, check=True)
-            with open(ipynb_generated_2) as f:
-                ipynb_generated_2_content = json.loads(f.read())
+                for ipynb in [ipynb_generated_2_content, ipynb_0_content]:
+                    if 'pycharm' in ipynb.get('metadata', {}):
+                        # only appears if generated through pycharm
+                        del ipynb['metadata']['pycharm']
 
-            for ipynb in [ipynb_generated_2_content, ipynb_0_content]:
-                if 'pycharm' in ipynb.get('metadata', {}):
-                    # only appears if generated through pycharm
-                    del ipynb['metadata']['pycharm']
+                assert ipynb_generated_2_content == ipynb_0_content, f'\n\n{ipynb_generated_2_content}\n{ipynb_0_content}'
 
-            assert ipynb_generated_2_content == ipynb_0_content, f'\n\n{ipynb_generated_2_content}\n{ipynb_0_content}'
+                cmd = ['scripts/herzog', 'convert', '-i', f'{ipynb_generated_2}', '-o', f'{py_generated_3}']
+                subprocess.run(cmd, check=True)
+                with open(py_generated_3) as f:
+                    py_generated_3_content = f.read()
 
-            cmd = ['scripts/herzog', 'convert', '-i', f'{ipynb_generated_2}', '-o', f'{py_generated_3}']
-            subprocess.run(cmd, check=True)
-            with open(py_generated_3) as f:
-                py_generated_3_content = f.read()
-
-            assert py_generated_1_content == py_generated_3_content
+                assert py_generated_1_content == py_generated_3_content
 
     def test_parser_errors(self):
         tests = {
