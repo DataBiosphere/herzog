@@ -31,9 +31,6 @@ class TestHerzog(unittest.TestCase):
         for expected_cell, cell in zip(expected_cells, cells):
             self.assertEqual(expected_cell, cell, f'\n{expected_cell}\n{cell}')
 
-        # with open('/home/quokka/git/herzog/scripts/awddwa', 'w') as f:
-        #     f.write('anything')
-
     def test_cli_two_way_conversion(self):
         """
         Make sure that if we convert back and forth multiple times, it always gives the same file.
