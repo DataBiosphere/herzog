@@ -49,12 +49,12 @@ class TestHerzog(unittest.TestCase):
             with open(ipynb_0) as f:
                 ipynb_0_content = json.loads(f.read())
 
-            cmd = ['scripts/herzog', 'convert', '-i', f'{ipynb_0}', '-o', f'{py_generated_1}']
+            cmd = ['dev_scripts/herzog', 'convert', '-i', f'{ipynb_0}', '-o', f'{py_generated_1}']
             subprocess.run(cmd, check=True)
             with open(py_generated_1) as f:
                 py_generated_1_content = f.read()
 
-            cmd = ['scripts/herzog', 'convert', '-i', f'{py_generated_1}', '-o', f'{ipynb_generated_2}']
+            cmd = ['dev_scripts/herzog', 'convert', '-i', f'{py_generated_1}', '-o', f'{ipynb_generated_2}']
             subprocess.run(cmd, check=True)
             with open(ipynb_generated_2) as f:
                 ipynb_generated_2_content = json.loads(f.read())
@@ -66,7 +66,7 @@ class TestHerzog(unittest.TestCase):
 
             assert ipynb_generated_2_content == ipynb_0_content, f'\n\n{ipynb_generated_2_content}\n{ipynb_0_content}'
 
-            cmd = ['scripts/herzog', 'convert', '-i', f'{ipynb_generated_2}', '-o', f'{py_generated_3}']
+            cmd = ['dev_scripts/herzog', 'convert', '-i', f'{ipynb_generated_2}', '-o', f'{py_generated_3}']
             subprocess.run(cmd, check=True)
             with open(py_generated_3) as f:
                 py_generated_3_content = f.read()
