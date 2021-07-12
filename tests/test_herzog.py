@@ -5,7 +5,6 @@ import sys
 import json
 import tempfile
 import unittest
-import subprocess
 
 from uuid import uuid4
 
@@ -13,6 +12,7 @@ pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noq
 sys.path.insert(0, pkg_root)  # noqa
 
 import herzog
+from herzog import cli
 
 
 class TestHerzog(unittest.TestCase):
@@ -49,13 +49,13 @@ class TestHerzog(unittest.TestCase):
             with open(ipynb_0) as f:
                 ipynb_0_content = json.loads(f.read())
 
-            cmd = ['dev_scripts/herzog-back', f'{ipynb_0}', '-o', f'{py_generated_1}']
-            subprocess.run(cmd, check=True)
+            cmd = [f'{ipynb_0}', '-o', f'{py_generated_1}']
+            cli.backward(cmd)
             with open(py_generated_1) as f:
                 py_generated_1_content = f.read()
 
-            cmd = ['dev_scripts/herzog', f'{py_generated_1}', '-o', f'{ipynb_generated_2}']
-            subprocess.run(cmd, check=True)
+            cmd = [f'{py_generated_1}', '-o', f'{ipynb_generated_2}']
+            cli.forward(cmd)
             with open(ipynb_generated_2) as f:
                 ipynb_generated_2_content = json.loads(f.read())
 
@@ -66,8 +66,8 @@ class TestHerzog(unittest.TestCase):
 
             assert ipynb_generated_2_content == ipynb_0_content, f'\n\n{ipynb_generated_2_content}\n{ipynb_0_content}'
 
-            cmd = ['dev_scripts/herzog-back', f'{ipynb_generated_2}', '-o', f'{py_generated_3}']
-            subprocess.run(cmd, check=True)
+            cmd = [f'{ipynb_generated_2}', '-o', f'{py_generated_3}']
+            cli.backward(cmd)
             with open(py_generated_3) as f:
                 py_generated_3_content = f.read()
 
