@@ -22,9 +22,9 @@ def get_version():
     else:
         p = subprocess.run(["git", "describe", "--tags", "--match", "v*.*.*"], stdout=subprocess.PIPE)
         if 128 == p.returncode:
-            warnings.warn('There are no git tags with version information. '
-                          'To tag the first commit as v0.0.0 use '
-                          'git tag --annotate "v0.0.0" $(git rev-list --max-parents=0 HEAD) -m "v0.0.0"')
+            warnings.warn("There are no git tags with version information. "
+                          "To tag the first commit as v0.0.0 use "
+                          "git tag --annotate 'v0.0.0' $(git rev-list --max-parents=0 HEAD) -m 'v0.0.0'")
             return "0"
         else:
             p.check_returncode()
@@ -45,7 +45,7 @@ setup(
     author_email="bhannafi@ucsc.edu",
     license="MIT",
     packages=find_packages(exclude=["tests"]),
-    entry_points=dict(console_scripts=['herzog=herzog.cli:main']),
+    entry_points=dict(console_scripts=["herzog=herzog.cli:forward", "herzog-back=herzog.cli:backward"]),
     include_package_data=True,
     zip_safe=False,
     install_requires=install_requires,
