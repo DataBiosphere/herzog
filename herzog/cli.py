@@ -1,13 +1,8 @@
-#!/usr/bin/env python
-import argparse
-import json
 import os
 import sys
-
+import json
+import argparse
 from typing import List, Optional
-
-pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))  # noqa
-sys.path.insert(0, pkg_root)  # noqa
 
 import herzog
 
@@ -31,9 +26,9 @@ def main(args: Optional[List[str]] = None):
                          help="The name of an input file.  Type will be inferred by the extension "
                               "('.ipynb' or '.py').")
     convert.add_argument("--output", "-o", type=str, required=False, default=None,
-                         help=f"The name of an output file.  Type will be inferred by the extension "
-                              f"('.ipynb' or '.py').  The type must not be the same as the input type.  "
-                              f"If this is not specified, output will be printed to stdout.")
+                         help="The name of an output file.  Type will be inferred by the extension "
+                              "('.ipynb' or '.py').  The type must not be the same as the input type.  "
+                              "If this is not specified, output will be printed to stdout.")
     options = parser.parse_args(args)
 
     assert os.path.exists(options.input)
@@ -53,7 +48,3 @@ def main(args: Optional[List[str]] = None):
             w.write(output_file_contents)
     else:
         print(output_file_contents)
-
-
-if __name__ == "__main__":
-    main()
