@@ -42,9 +42,9 @@ class TestHerzog(unittest.TestCase):
         ipynb_0 = 'tests/fixtures/example.ipynb'
 
         with tempfile.TemporaryDirectory() as tempdir:
-            py_generated_1 = os.path.join(tempdir, f'delete-{uuid4()}.py')
-            ipynb_generated_2 = os.path.join(tempdir, f'delete-{uuid4()}.ipynb')
-            py_generated_3 = os.path.join(tempdir, f'delete-{uuid4()}.py')
+            py_generated_1 = os.path.join(tempdir, f'{uuid4()}.py')
+            ipynb_generated_2 = os.path.join(tempdir, f'{uuid4()}.ipynb')
+            py_generated_3 = os.path.join(tempdir, f'{uuid4()}.py')
 
             with open(ipynb_0) as f:
                 ipynb_0_content = json.loads(f.read())
