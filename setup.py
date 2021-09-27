@@ -40,7 +40,7 @@ setup(
     description="Generate Jupyter notebooks.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/xbrianh/herzog.git",
+    url="https://github.com/DataBiosphere/herzog.git",
     author="Brian Hannafious",
     author_email="bhannafi@ucsc.edu",
     license="MIT",
