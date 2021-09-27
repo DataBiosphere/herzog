@@ -31,9 +31,9 @@ herzog path/to/my/cool_script.py > path/to/my/cool_notebook.ipynb
 ### Example
 
 An example herzog script is shown below, along with the generated notebook. Both the
-[herzog source](https://github.com/xbrianh/herzog/blob/master/tests/fixtures/fibonacci.py)
+[herzog source](https://github.com/DataBiosphere/herzog/blob/master/tests/fixtures/fibonacci.py)
 and
-[generated notebook](https://github.com/xbrianh/herzog/blob/master/tests/fixtures/fibonacci.ipynb)
+[generated notebook](https://github.com/DataBiosphere/herzog/blob/master/tests/fixtures/fibonacci.ipynb)
 can be found in the herzog repository.
 
 Note that everything outside herzog context managers is not included in the notebook. That's where you put tests,
@@ -72,7 +72,7 @@ golden_ratio = (1 + 5 ** 0.5) / 2
 assert 1e-10 > abs(golden_ratio - fibonacci(26) / fibonacci(25))
 ```
 
-![Rendered Fibonacci notebook](https://github.com/xbrianh/herzog/blob/master/tests/fixtures/fibonacci_rendered.png)
+![Rendered Fibonacci notebook](https://github.com/DataBiosphere/herzog/blob/master/tests/fixtures/fibonacci_rendered.png)
 
 ## Installation
 
@@ -82,11 +82,11 @@ pip install herzog
 
 ## Links
 
-Project home page [GitHub](https://github.com/xbrianh/herzog)  
+Project home page [GitHub](https://github.com/DataBiosphere/herzog)  
 Package distribution [PyPI](https://pypi.org/project/herzog/)
 
 ### Bugs
 
-Please report bugs, issues, feature requests, etc. on [GitHub](https://github.com/xbrianh/herzog).
+Please report bugs, issues, feature requests, etc. on [GitHub](https://github.com/DataBiosphere/herzog).
 
-![](https://travis-ci.com/xbrianh/herzog.svg?branch=master) ![](https://badge.fury.io/py/herzog.svg)
+![](https://travis-ci.com/DataBiosphere/herzog.svg?branch=master) ![](https://badge.fury.io/py/herzog.svg)
